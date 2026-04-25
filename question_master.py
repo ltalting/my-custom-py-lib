@@ -77,13 +77,13 @@ def check_answer(answer: str, valid_answers: list[Union[str, tuple[str, bool]]])
 # Or:
 #   range tuple = (range, allow_enter)
 def ask_question(question: str, valid_answers: Union[list[Union[Any, tuple[Any, bool]]], tuple[range, bool]] = [("any", True)], color: str = "white"):
-    answer_pending = True
+    
     normalized_valid_answers, any_answer_is_valid, is_range = normalize_valid_answers(valid_answers)
     # Check if we need to check_answer()
     if any_answer_is_valid:
         answer = input(f"{question.strip()} ").strip()
-        answer_pending = False
     else:
+        answer_pending = True
         total_valid_answers = len(normalized_valid_answers)
         normalized_valid_answers_str = ""
         # Handle answers_str when range was provided
@@ -93,9 +93,9 @@ def ask_question(question: str, valid_answers: Union[list[Union[Any, tuple[Any, 
             elif total_valid_answers > 1:
                 if normalized_valid_answers[0] == "":
                     if normalized_valid_answers[1] != normalized_valid_answers[total_valid_answers - 1]:
-                        normalized_valid_answers_str = f"{normalized_valid_answers[1]} - {normalized_valid_answers[total_valid_answers - 1]}"
+                        normalized_valid_answers_str = f"{normalized_valid_answers[1]} - {normalized_valid_answers[total_valid_answers - 1]}, <Enter>"
                     else:
-                        normalized_valid_answers_str = f"{normalized_valid_answers[1]}"
+                        normalized_valid_answers_str = f"{normalized_valid_answers[1]}, <Enter>"
                 else:
                     normalized_valid_answers_str = f"{normalized_valid_answers[0]} - {normalized_valid_answers[total_valid_answers - 1]}"
             else:

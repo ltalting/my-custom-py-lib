@@ -14,4 +14,4 @@ def parse_env_file(env_file_path: Path):
             environ.setdefault(key, value)
     else:
         log_msg("ERROR: Could not find .env file. It should be placed in the directory the script is being executed from.", "red")
-        exit_script(1, True)
+        exit_script(1)
