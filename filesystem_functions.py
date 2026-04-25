@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional, Callable, Union
+from .constants import extensions
 from .log_util import log_msg
 from .types.filesystem.file_metadata import FileMetadata
 from .types.filesystem.directory_metadata import DirectoryMetadata
@@ -7,10 +8,6 @@ from .types.filesystem.path_like import PathLike
 from .types.filesystem.file_like import FileLike
 from .types.filesystem.video_file_metadata import VideoFileMetadata
 from .types.filesystem.link_file_metadata import LinkFileMetadata
-
-text_extensions = {".txt", ".py", ".log"}
-video_extensions = {".mkv", ".avi", ".mp4"}
-link_extensions = {".lnk"}
 
 # Check existence/return target type flag
 def _exists(target: PathLike) -> Optional[dict[str, PathLike]]:
@@ -44,9 +41,9 @@ def preload_file(file_path: PathLike) -> dict:
 # Get file metadata
 def get_file(file_path: PathLike) -> FileLike:
     file = preload_file(file_path)
-    if file["extension"] in video_extensions:
+    if file["extension"] in extensions.VIDEO_EXTENSIONS:
         file = VideoFileMetadata(**file)
-    elif file["extension"] in link_extensions:
+    elif file["extension"] in extensions.LINK_EXTENSIONS:
         file = LinkFileMetadata(**file)
     else:
         file = FileMetadata(**file)
@@ -70,14 +67,14 @@ def get_path(target: PathLike) -> Union[FileLike, DirectoryMetadata]:
 # Print file lines and contents to cli
 def print_file(file_path: PathLike) -> None:
     file = get_file(file_path)
-    if file.extension in text_extensions:
+    if file.extension in TEXT_EXTENSIONS:
         line_count = count_file_lines(file.path)
         pad_width = len(str(line_count)) + 2
         with file.path.open("r", encoding = "utf-8", errors = "replace") as opened_file:
             for line_number, line in enumerate(opened_file, start = 1):
                 padded_line_number = str(line_number).ljust(pad_width, ' ')
                 log_msg(f"{padded_line_number}{line.rstrip()}")
-    elif file.extension in video_extensions:
+    elif file.extension in VIDEO_EXTENSIONS:
         log_msg("VIDEO FILE DETECTED: print_file() not implemented.", "yellow")
     else:
         log_msg(f"ERROR: File with extension {file.extension} is not printable", "red", 1)

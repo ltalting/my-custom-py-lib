@@ -7,8 +7,9 @@ from .path_like import PathLike
 
 @dataclass
 class FilesystemArtifact:
-    path: PathLike
+    path: Path
     name: str = ""
+    ext_name: str = ""
     created: Union[str, datetime] = "unknown"
     modified: Union[str, datetime] = "unknown"
     obtained_at: datetime = datetime.now()
@@ -16,6 +17,7 @@ class FilesystemArtifact:
     def to_dict(self) -> dict[str, str]:
         str_dict: dict[str, Any] = {
             "path": str(self.path),
+            "ext_name": self.ext_name,
             "name": self.name,
             "created": str(self.created),
             "modified": str(self.modified),
@@ -28,6 +30,7 @@ class FilesystemArtifact:
             self.path = Path(self.path)
         if not self.path.exists():
             raise FileNotFoundError(f"Path '{str(self.path)}' does not exist")
+        self.ext_name = self.path.name
         self.name = self.path.stem
         self.created = datetime.fromtimestamp(self.path.stat().st_ctime)
         self.modified = datetime.fromtimestamp(self.path.stat().st_mtime)

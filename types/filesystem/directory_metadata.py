@@ -4,7 +4,6 @@ from typing import Optional, Any
 from json import dumps
 from .filesystem_artifact import FilesystemArtifact
 
-
 @dataclass
 class DirectoryMetadata(FilesystemArtifact):
     contained_bytes: Optional[int] = None

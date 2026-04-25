@@ -5,7 +5,7 @@ from .la_vista_baby import exit_script_with_code
 from .common_functs import dict_values_to_keys
 
 # Log message method
-def log_msg(message = "", color = None, indent = None, stream = "stdout", exit: Optional[int] = None, **kwargs):
+def log_msg(message = "", color = None, indent: Optional[int] = None, stream = "stdout", exit: Optional[int] = None, **kwargs):
     # Handle color only if color is specified
     if color:
         colors = {

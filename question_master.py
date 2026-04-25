@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any, Tuple, Union
 from .common_functs import any_to_str
 from .log_util import log_msg
 
@@ -9,23 +9,36 @@ def is_any_answer_valid(normalized_valid_answers: list[str]) -> bool:
 
 # Convert list of tuple answers to list of str answers
 # Also handles "any" keyword
-def normalize_valid_answers(valid_answers: list[Union[Any, tuple[Any, bool]]]) -> list[str]:
+def normalize_valid_answers(valid_answers: Union[list[Union[Any, tuple[Any, bool]]], tuple[range, bool]]) -> Tuple[list[str], bool, bool]:
     # Flatten tuple list by applying options to string
     normalized_valid_answers: list[str] = []
-    for answer in valid_answers:
-        if isinstance(answer, str):
-            # By default, str-typed answers are case-insensitive
-            normalized_valid_answers.append(answer.lower().strip())
-        elif isinstance(answer, tuple):
-            # Lower if case-insensitive flag is True, otherwise add
-            normalized_valid_answers.append(answer[0].lower().strip() if answer[1] else answer[0].strip())
+    any_answer_is_valid: bool = False
+    is_range: bool = False
+    if isinstance(valid_answers, tuple):
+        if valid_answers[1]:
+            normalized_valid_answers.append("")
+        if len(valid_answers[0]) != 0:
+            normalized_valid_answers.extend(str(range_item) for range_item in valid_answers[0])
         else:
-            try:
-                normalized_valid_answer = any_to_str(answer)
-                normalized_valid_answers.append(normalized_valid_answer.lower().strip())
-            except Exception:
-                log_msg(f"Invalid type in answers list: '{str(answer)}' is {type(answer)}", "red", exit = 1)
-    return normalized_valid_answers, is_any_answer_valid(normalized_valid_answers)
+            normalized_valid_answers.append("1")
+        is_range = True
+    else:
+        for answer in valid_answers:
+            if isinstance(answer, str):
+                # By default, str-typed answers are case-insensitive
+                normalized_valid_answers.append(answer.lower().strip())
+            elif isinstance(answer, tuple):
+                # Lower if case-insensitive flag is True, otherwise add
+                normalized_valid_answers.append(answer[0].lower().strip() if answer[1] else answer[0].strip())
+            elif isinstance(answer, range):
+                log_msg("ERROR: Valid answer list cannot contain ranges. Send range-typed variables as valid_answers.", "red", exit = 1)
+            else:
+                try:
+                    normalized_valid_answer = any_to_str(answer)
+                    normalized_valid_answers.append(normalized_valid_answer.lower().strip())
+                except Exception:
+                    log_msg(f"Invalid type in answers list: '{str(answer)}' is {type(answer)}", "red", exit = 1)
+    return normalized_valid_answers, is_any_answer_valid(normalized_valid_answers), is_range
 
 # Returns true if answer is included in valid_answers
 # valid_answers is a list of strs and tuples where
@@ -57,17 +70,38 @@ def check_answer(answer: str, valid_answers: list[Union[str, tuple[str, bool]]])
     return is_valid
 
 # Ask a question and wait for input
-# valid_answers - tuple structure is: "answer", case_insensitive
-def ask_question(question: str, valid_answers: list[Union[Any, tuple[Any, bool]]] = [("any", True)], color: str = "white"):
+# valid_answers -
+# List of:
+#   Plain string answer = ""
+#   tuple answer = ("answer", case_insensitive)
+# Or:
+#   range tuple = (range, allow_enter)
+def ask_question(question: str, valid_answers: Union[list[Union[Any, tuple[Any, bool]]], tuple[range, bool]] = [("any", True)], color: str = "white"):
     answer_pending = True
-    normalized_valid_answers, any_answer_is_valid = normalize_valid_answers(valid_answers)
+    normalized_valid_answers, any_answer_is_valid, is_range = normalize_valid_answers(valid_answers)
     # Check if we need to check_answer()
     if any_answer_is_valid:
         answer = input(f"{question.strip()} ").strip()
         answer_pending = False
     else:
-        normalized_valid_answers_str = ", ".join(normalized_valid_answers)
-        # Loop while checking responses against valid answers
+        total_valid_answers = len(normalized_valid_answers)
+        normalized_valid_answers_str = ""
+        # Handle answers_str when range was provided
+        if is_range:
+            if total_valid_answers == 1:
+                normalized_valid_answers_str = normalized_valid_answers[0]
+            elif total_valid_answers > 1:
+                if normalized_valid_answers[0] == "":
+                    if normalized_valid_answers[1] != normalized_valid_answers[total_valid_answers - 1]:
+                        normalized_valid_answers_str = f"{normalized_valid_answers[1]} - {normalized_valid_answers[total_valid_answers - 1]}"
+                    else:
+                        normalized_valid_answers_str = f"{normalized_valid_answers[1]}"
+                else:
+                    normalized_valid_answers_str = f"{normalized_valid_answers[0]} - {normalized_valid_answers[total_valid_answers - 1]}"
+            else:
+                pass
+        else:
+            normalized_valid_answers_str = f"{normalized_valid_answers[0]} - {normalized_valid_answers[total_valid_answers - 1]}"
         while answer_pending:
             log_msg(f"{question} [{normalized_valid_answers_str}]", color)
             answer = input().strip()
