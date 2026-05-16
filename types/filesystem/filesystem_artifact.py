@@ -1,9 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Union, Any
 from json import dumps
 from datetime import datetime
 from pathlib import Path
-from .path_like import PathLike
 
 @dataclass
 class FilesystemArtifact:
@@ -12,7 +11,7 @@ class FilesystemArtifact:
     ext_name: str = ""
     created: Union[str, datetime] = "unknown"
     modified: Union[str, datetime] = "unknown"
-    obtained_at: datetime = datetime.now()
+    obtained_at: datetime = field(default_factory = datetime.now)
 
     def to_dict(self) -> dict[str, str]:
         str_dict: dict[str, Any] = {

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Callable, Union
+from typing import Optional, Callable, Union, TypeGuard
 from .constants import extensions
 from .log_util import log_msg
 from .types.filesystem.file_metadata import FileMetadata
@@ -17,6 +17,15 @@ def _exists(target: PathLike) -> Optional[dict[str, PathLike]]:
     else:
         return None
 
+def is_file_metadata(obj: object) -> TypeGuard[FileMetadata]:
+    return isinstance(obj, FileMetadata)
+
+def is_video_metadata(obj: object) -> TypeGuard[VideoFileMetadata]:
+    return isinstance(obj, VideoFileMetadata)
+
+def is_link_metadata(obj: object) -> TypeGuard[LinkFileMetadata]:
+    return isinstance(obj, LinkFileMetadata)
+
 def is_file(target: PathLike) -> bool:
     path = Path(target)
     return path.is_file()
@@ -24,6 +33,12 @@ def is_file(target: PathLike) -> bool:
 def is_dir(target: PathLike) -> bool:
     path = Path(target)
     return path.is_dir()
+
+def is_file_metadata(obj: object) -> TypeGuard[FileMetadata]:
+    return isinstance(obj, FileMetadata)
+
+def is_dir_metadata(obj: object) -> TypeGuard[DirectoryMetadata]:
+    return isinstance(obj, FileMetadata)
 
 def count_file_lines(file_path: PathLike):
     file = get_file(file_path)
@@ -67,14 +82,14 @@ def get_path(target: PathLike) -> Union[FileLike, DirectoryMetadata]:
 # Print file lines and contents to cli
 def print_file(file_path: PathLike) -> None:
     file = get_file(file_path)
-    if file.extension in TEXT_EXTENSIONS:
+    if file.extension in extensions.TEXT_EXTENSIONS:
         line_count = count_file_lines(file.path)
         pad_width = len(str(line_count)) + 2
         with file.path.open("r", encoding = "utf-8", errors = "replace") as opened_file:
             for line_number, line in enumerate(opened_file, start = 1):
                 padded_line_number = str(line_number).ljust(pad_width, ' ')
                 log_msg(f"{padded_line_number}{line.rstrip()}")
-    elif file.extension in VIDEO_EXTENSIONS:
+    elif file.extension in extensions.VIDEO_EXTENSIONS:
         log_msg("VIDEO FILE DETECTED: print_file() not implemented.", "yellow")
     else:
         log_msg(f"ERROR: File with extension {file.extension} is not printable", "red", 1)
